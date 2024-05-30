@@ -5,8 +5,9 @@ export class MongoDBClient {
 
     constructor(connectionString: string, tlsCertificateKeyFile: string) {
         this.client = new MongoClient(connectionString, {
-            tls: true,
-            tlsCAFile: tlsCertificateKeyFile
+            // TODO: enable this
+            //tls: true,
+            //tlsCAFile: tlsCertificateKeyFile
         });
     }
 
@@ -27,6 +28,18 @@ export class MongoDBClient {
         } catch (error) {
             console.error(error);
             return [];
+        }
+    }
+
+    async getDocument(database: string, collection: string, id: string) {
+        try {
+            await this.connect();
+            const document = this.client.db(database).collection(collection).findOne({ _id: id });
+            await this.close();
+            return document;
+        } catch (error) {
+            console.error(error);
+            return null;
         }
     }
 }

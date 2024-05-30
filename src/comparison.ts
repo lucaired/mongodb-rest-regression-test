@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import assert from 'assert';
 
-import { MongoDBClient } from "./mongodb";
+import { MongoDBClient } from "./mongoDBClient";
 import { RestClient } from "./rest";
 
 export module Comparision {
@@ -10,12 +10,31 @@ export module Comparision {
         _id: string;
     }
 
-    export async function compareChangeEffect() {
-        const mongoClient =  new MongoDBClient('mongodb://localhost:27017', 'path/to/certificate.pem');
-        const collection = await mongoClient.getDocuments('mydb', 'mycollection');
+    interface SUTSetup {
+        mongodbConnection: string;
+        mongodbCertificate: string;
+        mongodbDatabase: string;
+        mongodbCollection: string;
+        localRestApi: string;
+        devRestApi: string;
+        bearerToken: string;
+    }
+
+    export async function compareChangeEffect(SUTSetup: SUTSetup) {
+        const {
+            mongodbConnection,
+            mongodbCertificate,
+            mongodbDatabase,
+            mongodbCollection,
+            localRestApi,
+            devRestApi,
+            bearerToken
+        } = SUTSetup;
+        const mongoClient =  new MongoDBClient(mongodbConnection, mongodbCertificate);
+        const collection = await mongoClient.getDocuments(mongodbDatabase, mongodbCollection);
         const documentId = collection.map(doc => doc._id.toString());
-        const localHttpClient = new RestClient('token', 'https://api.example.com');
-        const devHttpClient = new RestClient('token', 'https://dev.api.example.com');
+        const localHttpClient = new RestClient(bearerToken, localRestApi);
+        const devHttpClient = new RestClient(bearerToken, devRestApi);
         for (const id of documentId) {
             const localDocument = await localHttpClient.get<DocumentWithId[]>(`document/${id}`);
             const devDocument = await devHttpClient.get<DocumentWithId[]>(`document/${id}`);
@@ -24,7 +43,7 @@ export module Comparision {
                 const devDocumentSanitized = _.flattenDeep(devDocument).sort();
                 assert.deepStrictEqual(localDocumentSanitized, devDocumentSanitized);
             } else {
-                throw new Error('Document not found on both stages');
+                throw new Error(`Document ${id} not found on both stages`);
             }
         }
     }
