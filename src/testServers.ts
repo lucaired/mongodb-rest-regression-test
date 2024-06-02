@@ -5,12 +5,13 @@ export module TestServers {
     export function startLocalServer(port: number, mongoDBClient: MongoDBClient) {
         const app = express();
 
-        app.get('/', (req, res) => {
-            const document = mongoDBClient.getDocument('test', 'test', 'test');
-            res.send('Hello World!');
+        app.get('/document/:id', (req, res) => {
+            const { id } = req.params;
+            const document = mongoDBClient.getDocument('test', 'test', id);
+            res.send(document);
         });
 
-        app.listen(port, () => {});
+        app.listen(port, () => { });
     }
 }
 

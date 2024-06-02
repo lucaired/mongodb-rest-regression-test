@@ -19,7 +19,6 @@ export class MongoDBClient {
         try {
             await this.connect();
             const documents = this.client.db(database).collection(collection).find().toArray();
-            await this.close();
             return documents;
         } catch (error) {
             console.error(error);
@@ -32,7 +31,6 @@ export class MongoDBClient {
             await this.connect();
             console.log('Connected successfully to server');
             const document = this.client.db(database).collection(collection).findOne({ _id: new ObjectId(id) });
-            await this.close();
             return document;
         } catch (error) {
             console.error(error);
@@ -45,7 +43,6 @@ export class MongoDBClient {
             await this.connect();
             console.log('Connected successfully to server');
             await this.client.db(database).collection(collection).insertMany(documents);
-            await this.close();
         } catch (error) {
             console.error(error);
         }
