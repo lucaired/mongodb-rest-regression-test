@@ -1,14 +1,10 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 
 export class MongoDBClient {
     private client: MongoClient;
 
     constructor(connectionString: string, tlsCertificateKeyFile: string) {
-        this.client = new MongoClient(connectionString, {
-            // TODO: enable this
-            //tls: true,
-            //tlsCAFile: tlsCertificateKeyFile
-        });
+        this.client = new MongoClient(connectionString);
     }
 
     private async connect() {
@@ -34,12 +30,24 @@ export class MongoDBClient {
     async getDocument(database: string, collection: string, id: string) {
         try {
             await this.connect();
-            const document = this.client.db(database).collection(collection).findOne({ _id: id });
+            console.log('Connected successfully to server');
+            const document = this.client.db(database).collection(collection).findOne({ _id: new ObjectId(id) });
             await this.close();
             return document;
         } catch (error) {
             console.error(error);
             return null;
+        }
+    }
+
+    async populateDatabase(database: string, collection: string, documents: any[]) {
+        try {
+            await this.connect();
+            console.log('Connected successfully to server');
+            await this.client.db(database).collection(collection).insertMany(documents);
+            await this.close();
+        } catch (error) {
+            console.error(error);
         }
     }
 }
