@@ -6,7 +6,7 @@ import { MongoDBClient } from './mongoDBClient';
 describe('MongoDBClient', () => {
     it('should populate database and get documents', async () => {
         const mongoDB = new InMemoryMongoDB();
-        const mongoDBuri = await mongoDB.start();
+        const mongoDBuri = await mongoDB.start(2000);
         const mongoDBClient = new MongoDBClient(mongoDBuri, '');
         await mongoDBClient.populateDatabase('test', 'test', [
             { name: 'agatha', age: 42 },

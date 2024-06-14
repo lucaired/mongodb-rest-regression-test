@@ -11,7 +11,7 @@ export class MongoDBClient {
         await this.client.connect();
     }
 
-    private async close() {
+    async close() {
         await this.client.close();
     }
 

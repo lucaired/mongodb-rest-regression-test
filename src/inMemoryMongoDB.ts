@@ -7,12 +7,12 @@ export class InMemoryMongoDB {
         this.mongodb = undefined;
     }
 
-    async start() {
-        this.mongodb = await MongoMemoryServer.create({
+    async start(port?: number) {
+        this.mongodb = await MongoMemoryServer.create(port ? {
             instance: {
-                port: 14537
+                port,
             }
-        });
+        } : {});
         return this.mongodb.getUri();
     }
 
