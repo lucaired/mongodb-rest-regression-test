@@ -12,7 +12,7 @@ export module Comparision {
 
     interface SUTSetup {
         mongodbConnection: string;
-        mongodbCertificate: string;
+        mongodbCertificate: string | undefined;
         mongodbDatabase: string;
         mongodbCollection: string;
         localRestApi: string;
@@ -30,21 +30,25 @@ export module Comparision {
             devRestApi,
             bearerToken
         } = SUTSetup;
-        const mongoClient =  new MongoDBClient(mongodbConnection, mongodbCertificate);
+        const mongoClient = new MongoDBClient(mongodbConnection, mongodbCertificate);
         const collection = await mongoClient.getDocuments(mongodbDatabase, mongodbCollection);
-        const documentId = collection.map(doc => doc._id.toString());
+        const documentIds = collection.map(doc => doc._id.toString());
         const localHttpClient = new RestClient(bearerToken, localRestApi);
         const devHttpClient = new RestClient(bearerToken, devRestApi);
-        for (const id of documentId) {
-            const localDocument = await localHttpClient.get<DocumentWithId[]>(`document/${id}`);
-            const devDocument = await devHttpClient.get<DocumentWithId[]>(`document/${id}`);
+        const diffErrors = [];
+        for (const id of documentIds) {
+            const localDocument = await localHttpClient.get<DocumentWithId[]>(`${mongodbCollection}/${id}`);
+            const devDocument = await devHttpClient.get<DocumentWithId[]>(`${mongodbCollection}/${id}`);
             if (!_.isNil(localDocument) && !_.isNil(devDocument)) {
-                const localDocumentSanitized = _.flattenDeep(localDocument).sort();
-                const devDocumentSanitized = _.flattenDeep(devDocument).sort();
-                assert.deepStrictEqual(localDocumentSanitized, devDocumentSanitized);
+                try {
+                    assert.deepStrictEqual(localDocument, devDocument);
+                } catch (error) {
+                    diffErrors.push(id);
+                }
             } else {
-                throw new Error(`Document ${id} not found on both stages`);
+                diffErrors.push(id);
             }
         }
+        return diffErrors;
     }
 }

@@ -3,7 +3,8 @@ import { MongoClient, ObjectId } from 'mongodb';
 export class MongoDBClient {
     private client: MongoClient;
 
-    constructor(connectionString: string, tlsCertificateKeyFile: string) {
+    constructor(connectionString: string, tlsCertificateKeyFile: string | undefined) {
+        // TODO: add tls support
         this.client = new MongoClient(connectionString);
     }
 
